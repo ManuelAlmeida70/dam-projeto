@@ -1,15 +1,12 @@
 package pt.uan.anuncioSloc.persistence.repository;
 
 import pt.uan.anuncioSloc.persistence.entity.UtilizadorInfra;
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * Repository para operações com UtilizadorInfra usando Criteria API (ORM)
+ * Repository para operações com UtilizadorInfra usando armazenamento em memória
  */
 public class UtilizadorInfraRepository extends BaseRepository<UtilizadorInfra, Long> {
 
@@ -18,100 +15,44 @@ public class UtilizadorInfraRepository extends BaseRepository<UtilizadorInfra, L
     }
 
     /**
-     * Encontra um utilizador por email e infraestrutura usando Criteria API
+     * Encontra um utilizador por email e infraestrutura
      */
     public UtilizadorInfra findByEmailAndInfraId(String email, Long infraId) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<UtilizadorInfra> cq = cb.createQuery(UtilizadorInfra.class);
-            Root<UtilizadorInfra> root = cq.from(UtilizadorInfra.class);
-            
-            Predicate emailPredicate = cb.equal(root.get("email"), email);
-            Predicate infraPredicate = cb.equal(root.get("infraestrutura").get("id"), infraId);
-            
-            cq.where(cb.and(emailPredicate, infraPredicate));
-            
-            List<UtilizadorInfra> results = em.createQuery(cq).getResultList();
-            return results.isEmpty() ? null : results.get(0);
-        } finally {
-            em.close();
-        }
+        return firstOrNull(filter(utilizador -> Objects.equals(utilizador.getEmail(), email)
+                && utilizador.getInfraestrutura() != null
+                && Objects.equals(utilizador.getInfraestrutura().getId(), infraId)));
     }
 
     /**
-     * Encontra todos os utilizadores de uma infraestrutura usando Criteria API
+     * Encontra todos os utilizadores de uma infraestrutura
      */
     public List<UtilizadorInfra> findByInfraId(Long infraId) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<UtilizadorInfra> cq = cb.createQuery(UtilizadorInfra.class);
-            Root<UtilizadorInfra> root = cq.from(UtilizadorInfra.class);
-            
-            cq.where(cb.equal(root.get("infraestrutura").get("id"), infraId));
-            cq.orderBy(cb.asc(root.get("email")));
-            
-            return em.createQuery(cq).getResultList();
-        } finally {
-            em.close();
-        }
+        return sort(filter(utilizador -> utilizador.getInfraestrutura() != null
+                        && Objects.equals(utilizador.getInfraestrutura().getId(), infraId)),
+                Comparator.comparing(UtilizadorInfra::getEmail));
     }
 
     /**
-     * Encontra todos os utilizadores por email usando Criteria API
+     * Encontra todos os utilizadores por email
      */
     public List<UtilizadorInfra> findByEmail(String email) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<UtilizadorInfra> cq = cb.createQuery(UtilizadorInfra.class);
-            Root<UtilizadorInfra> root = cq.from(UtilizadorInfra.class);
-            
-            cq.where(cb.equal(root.get("email"), email));
-            
-            return em.createQuery(cq).getResultList();
-        } finally {
-            em.close();
-        }
+        return filter(utilizador -> Objects.equals(utilizador.getEmail(), email));
     }
 
     /**
-     * Conta utilizadores por infraestrutura usando Criteria API
+     * Conta utilizadores por infraestrutura
      */
     public long countByInfraId(Long infraId) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<UtilizadorInfra> root = cq.from(UtilizadorInfra.class);
-            
-            cq.select(cb.count(root));
-            cq.where(cb.equal(root.get("infraestrutura").get("id"), infraId));
-            
-            return em.createQuery(cq).getSingleResult();
-        } finally {
-            em.close();
-        }
+        return findByInfraId(infraId).size();
     }
 
     /**
-     * Retorna utilizadores com inatividade acima de X ms usando Criteria API
+     * Retorna utilizadores com inatividade acima de X ms
      */
     public List<UtilizadorInfra> findInactiveUsers(Long inactivityThresholdMs) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<UtilizadorInfra> cq = cb.createQuery(UtilizadorInfra.class);
-            Root<UtilizadorInfra> root = cq.from(UtilizadorInfra.class);
-            
-            Long thresholdTime = System.currentTimeMillis() - inactivityThresholdMs;
-            cq.where(cb.lessThan(root.get("ultimaAtividade"), thresholdTime));
-            cq.orderBy(cb.asc(root.get("email")));
-            
-            return em.createQuery(cq).getResultList();
-        } finally {
-            em.close();
-        }
+        long thresholdTime = System.currentTimeMillis() - inactivityThresholdMs;
+        return sort(filter(utilizador -> utilizador.getUltimaAtividade() != null
+                        && utilizador.getUltimaAtividade() < thresholdTime),
+                Comparator.comparing(UtilizadorInfra::getEmail));
     }
 }

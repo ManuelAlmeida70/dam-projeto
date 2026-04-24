@@ -1,15 +1,11 @@
 package pt.uan.anuncioSloc.persistence.repository;
 
 import pt.uan.anuncioSloc.persistence.entity.Restricao;
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import java.util.Objects;
 import java.util.List;
 
 /**
- * Repository para operações com Restricao usando Criteria API (ORM)
+ * Repository para operações com Restricao usando armazenamento em memória
  */
 public class RestricaoRepository extends BaseRepository<Restricao, Long> {
 
@@ -18,60 +14,27 @@ public class RestricaoRepository extends BaseRepository<Restricao, Long> {
     }
 
     /**
-     * Encontra todas as restrições de uma infraestrutura usando Criteria API
+     * Encontra todas as restrições de uma infraestrutura
      */
     public List<Restricao> findByInfraId(Long infraId) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Restricao> cq = cb.createQuery(Restricao.class);
-            Root<Restricao> root = cq.from(Restricao.class);
-            
-            cq.where(cb.equal(root.get("infraestrutura").get("id"), infraId));
-            
-            return em.createQuery(cq).getResultList();
-        } finally {
-            em.close();
-        }
+        return filter(restricao -> restricao.getInfraestrutura() != null
+                && Objects.equals(restricao.getInfraestrutura().getId(), infraId));
     }
 
     /**
-     * Encontra restrições por tipo usando Criteria API
+     * Encontra restrições por tipo
      */
     public List<Restricao> findByInfraIdAndTipo(Long infraId, String tipo) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Restricao> cq = cb.createQuery(Restricao.class);
-            Root<Restricao> root = cq.from(Restricao.class);
-            
-            Predicate infraPredicate = cb.equal(root.get("infraestrutura").get("id"), infraId);
-            Predicate tipoPredicate = cb.equal(root.get("tipo").as(String.class), tipo);
-            
-            cq.where(cb.and(infraPredicate, tipoPredicate));
-            
-            return em.createQuery(cq).getResultList();
-        } finally {
-            em.close();
-        }
+        return filter(restricao -> restricao.getInfraestrutura() != null
+                && Objects.equals(restricao.getInfraestrutura().getId(), infraId)
+                && restricao.getTipo() != null
+                && Objects.equals(restricao.getTipo().name(), tipo));
     }
 
     /**
-     * Conta restrições por infraestrutura usando Criteria API
+     * Conta restrições por infraestrutura
      */
     public long countByInfraId(Long infraId) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<Restricao> root = cq.from(Restricao.class);
-            
-            cq.select(cb.count(root));
-            cq.where(cb.equal(root.get("infraestrutura").get("id"), infraId));
-            
-            return em.createQuery(cq).getSingleResult();
-        } finally {
-            em.close();
-        }
+        return findByInfraId(infraId).size();
     }
 }

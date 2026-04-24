@@ -2,15 +2,12 @@ package pt.uan.anuncioSloc.persistence.repository;
 
 import pt.uan.anuncioSloc.persistence.entity.Local;
 import pt.uan.anuncioSloc.persistence.entity.Infraestrutura;
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * Repository para operações com Local usando Criteria API (ORM)
+ * Repository para operações com Local usando armazenamento em memória
  */
 public class LocalRepository extends BaseRepository<Local, Long> {
 
@@ -19,69 +16,35 @@ public class LocalRepository extends BaseRepository<Local, Long> {
     }
 
     /**
-     * Encontra um local pelo nome e infraestrutura usando Criteria API
+     * Encontra um local pelo nome e infraestrutura
      */
     public Local findByNomeAndInfraestrutura(String nome, Infraestrutura infraestrutura) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Local> cq = cb.createQuery(Local.class);
-            Root<Local> root = cq.from(Local.class);
-            
-            Predicate namePredicate = cb.equal(root.get("nome"), nome);
-            Predicate infraPredicate = cb.equal(root.get("infraestrutura").get("id"), infraestrutura.getId());
-            
-            cq.where(cb.and(namePredicate, infraPredicate));
-            
-            List<Local> results = em.createQuery(cq).getResultList();
-            return results.isEmpty() ? null : results.get(0);
-        } finally {
-            em.close();
-        }
+        return firstOrNull(filter(local -> Objects.equals(local.getNome(), nome)
+                && local.getInfraestrutura() != null
+                && infraestrutura != null
+                && Objects.equals(local.getInfraestrutura().getId(), infraestrutura.getId())));
     }
 
     /**
-     * Encontra todos os locais de uma infraestrutura usando Criteria API
+     * Encontra todos os locais de uma infraestrutura
      */
     public List<Local> findByInfraestrutura(Infraestrutura infraestrutura) {
-        return findByInfraestruturaId(infraestrutura.getId());
+        return infraestrutura == null ? List.of() : findByInfraestruturaId(infraestrutura.getId());
     }
 
     /**
-     * Encontra todos os locais de uma infraestrutura por ID usando Criteria API
+     * Encontra todos os locais de uma infraestrutura por ID
      */
     public List<Local> findByInfraestruturaId(Long infraId) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Local> cq = cb.createQuery(Local.class);
-            Root<Local> root = cq.from(Local.class);
-            
-            cq.where(cb.equal(root.get("infraestrutura").get("id"), infraId));
-            cq.orderBy(cb.asc(root.get("nome")));
-            
-            return em.createQuery(cq).getResultList();
-        } finally {
-            em.close();
-        }
+        return sort(filter(local -> local.getInfraestrutura() != null
+                        && Objects.equals(local.getInfraestrutura().getId(), infraId)),
+                Comparator.comparing(Local::getNome));
     }
 
     /**
-     * Conta locais por infraestrutura usando Criteria API
+     * Conta locais por infraestrutura
      */
     public long countByInfraestrutura(Long infraId) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<Local> root = cq.from(Local.class);
-            
-            cq.select(cb.count(root));
-            cq.where(cb.equal(root.get("infraestrutura").get("id"), infraId));
-            
-            return em.createQuery(cq).getSingleResult();
-        } finally {
-            em.close();
-        }
+        return findByInfraestruturaId(infraId).size();
     }
 }

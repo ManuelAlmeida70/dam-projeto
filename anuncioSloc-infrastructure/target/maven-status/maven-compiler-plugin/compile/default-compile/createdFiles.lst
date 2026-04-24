@@ -3,7 +3,6 @@ pt\uan\anuncioSloc\service\AnuncioService.class
 pt\uan\anuncioSloc\persistence\entity\Coordenada.class
 pt\uan\anuncioSloc\persistence\repository\CoordenadaRepository.class
 pt\uan\anuncioSloc\persistence\repository\LocalRepository.class
-pt\uan\anuncioSloc\persistence\repository\EntityManagerFactory_Factory.class
 pt\uan\anuncioSloc\persistence\entity\Coordenada$TipoCoordenada.class
 pt\uan\anuncioSloc\persistence\entity\UtilizadorInfra.class
 pt\uan\anuncioSloc\service\UtilizadorService.class
@@ -16,6 +15,5 @@ pt\uan\anuncioSloc\persistence\entity\Local.class
 pt\uan\anuncioSloc\App.class
 pt\uan\anuncioSloc\persistence\repository\BaseRepository.class
 pt\uan\anuncioSloc\persistence\repository\InfraestruturaRepository.class
-pt\uan\anuncioSloc\webservice\InfraestruturaWebService.class
 pt\uan\anuncioSloc\persistence\repository\UtilizadorInfraRepository.class
 pt\uan\anuncioSloc\persistence\repository\AnuncioRepository.class

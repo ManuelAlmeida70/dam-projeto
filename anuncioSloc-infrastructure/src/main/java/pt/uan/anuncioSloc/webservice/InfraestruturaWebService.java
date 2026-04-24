@@ -3,6 +3,8 @@ package pt.uan.anuncioSloc.webservice;
 import pt.uan.anuncioSloc.persistence.entity.Infraestrutura;
 import pt.uan.anuncioSloc.persistence.entity.Local;
 import pt.uan.anuncioSloc.persistence.entity.Restricao;
+import pt.uan.anuncioSloc.persistence.repository.InMemoryPersistenceStore;
+import pt.uan.anuncioSloc.persistence.repository.LocalRepository;
 import pt.uan.anuncioSloc.service.InfraestruturaService;
 import pt.uan.anuncioSloc.service.UtilizadorService;
 
@@ -105,7 +107,7 @@ public class InfraestruturaWebService {
             // Adiciona coordenada GPS se fornecida
             if (latitude != null && longitude != null && raioMetros != null) {
                 local.adicionarCoordenadaGPS(latitude, longitude, raioMetros);
-                infraService.obterLocal(local.getId()); // Recarrega
+                new LocalRepository().update(local);
             }
 
             return "SUCESSO: Local criado com ID=" + local.getId();
@@ -211,11 +213,8 @@ public class InfraestruturaWebService {
     )
     public String clear() {
         try {
-            List<Infraestrutura> todas = infraService.listarTodas();
-            for (Infraestrutura infra : todas) {
-                infraService.deletarInfraestrutura(infra.getId());
-            }
-            return "SUCESSO: Base de dados limpa";
+            InMemoryPersistenceStore.clear();
+            return "SUCESSO: Memória limpa";
         } catch (Exception e) {
             return "ERRO: " + e.getMessage();
         }

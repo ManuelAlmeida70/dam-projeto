@@ -1,14 +1,12 @@
 package pt.uan.anuncioSloc.persistence.repository;
 
 import pt.uan.anuncioSloc.persistence.entity.Infraestrutura;
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * Repository para operações com Infraestrutura usando Criteria API (ORM)
+ * Repository para operações com Infraestrutura usando armazenamento em memória
  */
 public class InfraestruturaRepository extends BaseRepository<Infraestrutura, Long> {
 
@@ -17,99 +15,41 @@ public class InfraestruturaRepository extends BaseRepository<Infraestrutura, Lon
     }
 
     /**
-     * Encontra uma infraestrutura pelo nome usando Criteria API
+     * Encontra uma infraestrutura pelo nome
      */
     public Infraestrutura findByNome(String nome) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Infraestrutura> cq = cb.createQuery(Infraestrutura.class);
-            Root<Infraestrutura> root = cq.from(Infraestrutura.class);
-            
-            cq.where(cb.equal(root.get("nome"), nome));
-            
-            List<Infraestrutura> results = em.createQuery(cq).getResultList();
-            return results.isEmpty() ? null : results.get(0);
-        } finally {
-            em.close();
-        }
+        return firstOrNull(filter(infraestrutura -> Objects.equals(infraestrutura.getNome(), nome)));
     }
 
     /**
-     * Encontra uma infraestrutura pela URL usando Criteria API
+     * Encontra uma infraestrutura pela URL
      */
     public Infraestrutura findByUrlServidor(String url) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Infraestrutura> cq = cb.createQuery(Infraestrutura.class);
-            Root<Infraestrutura> root = cq.from(Infraestrutura.class);
-            
-            cq.where(cb.equal(root.get("urlServidor"), url));
-            
-            List<Infraestrutura> results = em.createQuery(cq).getResultList();
-            return results.isEmpty() ? null : results.get(0);
-        } finally {
-            em.close();
-        }
+        return firstOrNull(filter(infraestrutura -> Objects.equals(infraestrutura.getUrlServidor(), url)));
     }
 
     /**
-     * Lista todas as infraestruturas com paginação usando Criteria API
+     * Lista todas as infraestruturas com paginação
      */
     public List<Infraestrutura> findAllPaginated(int offset, int limit) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Infraestrutura> cq = cb.createQuery(Infraestrutura.class);
-            Root<Infraestrutura> root = cq.from(Infraestrutura.class);
-            
-            cq.orderBy(cb.asc(root.get("id")));
-            
-            return em.createQuery(cq)
-                    .setFirstResult(offset)
-                    .setMaxResults(limit)
-                    .getResultList();
-        } finally {
-            em.close();
-        }
+        return page(sort(findAll(), Comparator.comparing(Infraestrutura::getId)), offset, limit);
     }
 
     /**
-     * Retorna infraestruturas ativas usando Criteria API
+     * Retorna infraestruturas ativas
      */
     public List<Infraestrutura> findAllAtivas() {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Infraestrutura> cq = cb.createQuery(Infraestrutura.class);
-            Root<Infraestrutura> root = cq.from(Infraestrutura.class);
-            
-            cq.where(cb.greaterThan(root.get("capacidadeMaxima"), 0));
-            cq.orderBy(cb.asc(root.get("nome")));
-            
-            return em.createQuery(cq).getResultList();
-        } finally {
-            em.close();
-        }
+        return sort(filter(infraestrutura -> infraestrutura.getCapacidadeMaxima() != null
+                        && infraestrutura.getCapacidadeMaxima() > 0),
+                Comparator.comparing(Infraestrutura::getNome));
     }
 
     /**
      * Encontra infraestruturas por capacidade mínima
      */
     public List<Infraestrutura> findByCapacidadeMinima(Integer capacidade) {
-        EntityManager em = EntityManagerFactory_Factory.createEntityManager();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Infraestrutura> cq = cb.createQuery(Infraestrutura.class);
-            Root<Infraestrutura> root = cq.from(Infraestrutura.class);
-            
-            cq.where(cb.greaterThanOrEqualTo(root.get("capacidadeMaxima"), capacidade));
-            cq.orderBy(cb.asc(root.get("nome")));
-            
-            return em.createQuery(cq).getResultList();
-        } finally {
-            em.close();
-        }
+        return sort(filter(infraestrutura -> infraestrutura.getCapacidadeMaxima() != null
+                        && infraestrutura.getCapacidadeMaxima() >= capacidade),
+                Comparator.comparing(Infraestrutura::getNome));
     }
 }
